@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  phone     String   @unique
+  name      String
+  userType  UserType
+  password  String
+  userCrops UserCrops[]
+  products  Product[]
+  inventory Inventory[]
+  orders Orders[]
+  createdAt DateTime @default(now())
+}
+
+model Crops {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  image     String
+  userCrops UserCrops[]
+  tips      String @default("No tips available")
+  createdAt DateTime @default(now())
+}
+
+model MarketPrice {
+  id          Int     @id @default(autoincrement())
+  name        String
+  state       String
+  district    String
+  market      String
+  min_price   String
+  max_price   String
+  modal_price String
+
+  @@index([name,state])
+}
+
+
+
+model UserCrops {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  crop      Crops    @relation(fields: [cropId], references: [id])
+  cropId    String
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id                      String      @id @default(uuid())
+  userId             String
+  user                    User  @relation(fields: [userId], references: [id])
+  name                    String
+  unit                    String
+  images                  String
+  qty                     Int
+  salesPrice              Decimal     @db.Decimal(10, 2)
+  description             String      @db.Text
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+  inventory               Inventory?
+  orders                  Orders[]
+
+  @@unique([userId, name, unit])
+}
+model Inventory {
+  id          String     @id @default(uuid())
+  productId   String     @unique
+  product     Product    @relation(fields: [productId], references: [id])
+  userId String
+  user        User @relation(fields: [userId], references: [id])
+  stock       Int
+  totalSales  Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+
+model Orders {
+  id String @id @default(uuid())
+  userId String
+  sellerId String
+  user User @relation(fields: [userId], references: [id])
+  productId String
+  product Product @relation(fields: [productId], references: [id])
+  qty Int
+  address String
+  price String
+  amount String
+  paymentMode String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Shopping {
+  id String @id @default(uuid())
+  name String
+  category String
+  price String
+  size String
+  producedBy String
+  sellerName String
+  sellerPhone String
+  sellerAddress String
+  image String @default("Not available")
+}
+
+
+enum UserType {
+  Farmer
+  Customer
+}
